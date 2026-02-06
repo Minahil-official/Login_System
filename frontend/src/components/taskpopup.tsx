@@ -246,29 +246,6 @@ const Dashboard: React.FC<{
                   {/* Dropdown menu - only shown when this task's kebab is active */}
                   {activeKebab === task.id && (
                     <div className="dropdown">
-                      {/* Agent Chat option - opens AI chat for this task */}
-                      <button
-                        style={{
-                          display: "block",
-                          width: "100%",
-                          padding: "8px",
-                          border: "none",
-                          background: "#f0f0f0",
-                          cursor: "pointer",
-                          fontSize: "14px",
-                          textAlign: "left"
-                        }}
-                        onClick={() => {
-                          // Set this task as the selected task for AI chat
-                          setSelectedTaskForAI({id: task.id, title: task.title});
-                          // Save to localStorage for persistence
-                          localStorage.setItem('selectedTaskId', task.id.toString());
-                          // Close the kebab menu
-                          setActiveKebab(null);
-                        }}
-                      >
-                        Agent Chat
-                      </button>
                       {/* Edit option - enters edit mode for this task */}
                       <button
                         style={{

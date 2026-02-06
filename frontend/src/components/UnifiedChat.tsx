@@ -84,7 +84,7 @@ const UnifiedChat: React.FC<UnifiedChatProps> = ({ user, taskName, onCloseTaskMe
     }
   }, [taskName, user.first_name, user.username, onCloseTaskMenu]);
 
-  // Fetch all tasks when the component mounts or when token changes
+  // Fetch all tasks when the component mounts, when token changes, or when chat opens
   useEffect(() => {
     const fetchTasks = async () => {
       try {
@@ -107,9 +107,9 @@ const UnifiedChat: React.FC<UnifiedChatProps> = ({ user, taskName, onCloseTaskMe
         console.error('Failed to fetch tasks:', error);
       }
     };
-    // Only fetch if we have a valid token
-    if (user.token) fetchTasks();
-  }, [user.token, mode, currentTaskId]);
+    // Only fetch if we have a valid token and chat is open
+    if (user.token && isOpen) fetchTasks();
+  }, [user.token, mode, currentTaskId, isOpen]);
 
   // Handle mode switching - reset messages when switching modes
   useEffect(() => {
@@ -201,6 +201,10 @@ const UnifiedChat: React.FC<UnifiedChatProps> = ({ user, taskName, onCloseTaskMe
         // Call the app-guide endpoint (not task-specific)
         response = await api.post('/tasks/app-guide/chat', {
           message: currentInput
+        }, {
+          headers: {
+            'Content-Type': 'application/json'
+          }
         });
       } else { // TASK mode
         // Don't send if no task is selected
@@ -210,6 +214,10 @@ const UnifiedChat: React.FC<UnifiedChatProps> = ({ user, taskName, onCloseTaskMe
         // Call the task-specific endpoint
         response = await api.post(`/tasks/${currentTaskId}/chat`, {
           message: currentInput
+        }, {
+          headers: {
+            'Content-Type': 'application/json'
+          }
         });
       }
 
@@ -222,12 +230,32 @@ const UnifiedChat: React.FC<UnifiedChatProps> = ({ user, taskName, onCloseTaskMe
       // Add agent response to conversation
       const finalHistory = [...tempHistory, agentMsg];
       setMessages(finalHistory);
-    } catch (err) {
+    } catch (err: any) {
       // Handle errors - show error message in chat
       console.error("CHAT ERROR:", err);
+
+      let errorMessage = "Connection error. Is the backend running?";
+      if (err.response) {
+        // Server responded with error status
+        let errorDetail = 'Please try again.';
+        if (typeof err.response.data === 'string') {
+          errorDetail = err.response.data;
+        } else if (err.response.data && typeof err.response.data === 'object') {
+          // Try to get the detail field or convert the object to string
+          errorDetail = err.response.data.detail || JSON.stringify(err.response.data);
+        }
+        errorMessage = `Server error: ${err.response.status} - ${errorDetail}`;
+      } else if (err.request) {
+        // Request was made but no response received
+        errorMessage = "Network error: Unable to connect to server. Please check your connection and ensure the backend is running.";
+      } else {
+        // Something else happened
+        errorMessage = `Error: ${err.message || 'Please try again.'}`;
+      }
+
       const errorMsg = {
         sender: "agent",
-        text: "Connection error. Is the backend running?"
+        text: errorMessage
       };
       const errorHistory = [...tempHistory, errorMsg];
       setMessages(errorHistory);
@@ -333,34 +361,81 @@ const UnifiedChat: React.FC<UnifiedChatProps> = ({ user, taskName, onCloseTaskMe
             <div>
               {getHeaderTitle()}
             </div>
-            {/* Mode toggle button - allows switching between modes */}
-            <button
-              onClick={() => {
-                if (mode === 'APP_GUIDE') {
-                  setMode('TASK');
-                  // If there are tasks, select the first one
-                  if (tasks.length > 0 && !currentTaskId) {
-                    const firstTask = tasks[0];
-                    setCurrentTaskId(firstTask.id.toString());
-                    setCurrentTaskTitle(firstTask.title);
-                    localStorage.setItem('selectedTaskId', firstTask.id.toString());
+              {/* Mode toggle and task refresh controls */}
+            <div style={{ display: 'flex', gap: '4px' }}>
+              {mode === 'TASK' && tasks.length > 1 && (
+                <select
+                  value={currentTaskId}
+                  onChange={handleTaskChange}
+                  style={{
+                    background: 'rgba(255,255,255,0.2)',
+                    border: '1px solid rgba(255,255,255,0.3)',
+                    color: 'white',
+                    borderRadius: '4px',
+                    padding: '4px 8px',
+                    fontSize: '12px',
+                    cursor: 'pointer'
+                  }}
+                >
+                  <option value="">Switch Task...</option>
+                  {tasks.map(task => (
+                    <option key={task.id} value={task.id.toString()}>
+                      {task.title}
+                    </option>
+                  ))}
+                </select>
+              )}
+              <button
+                onClick={async () => {
+                  // Refresh tasks list
+                  try {
+                    const response = await api.get('/tasks/');
+                    setTasks(response.data);
+                  } catch (error) {
+                    console.error('Failed to refresh tasks:', error);
                   }
-                } else {
-                  setMode('APP_GUIDE');
-                }
-              }}
-              style={{
-                background: 'rgba(255,255,255,0.2)',
-                border: '1px solid rgba(255,255,255,0.3)',
-                color: 'white',
-                borderRadius: '4px',
-                padding: '4px 8px',
-                fontSize: '12px',
-                cursor: 'pointer'
-              }}
-            >
-              {mode === 'APP_GUIDE' ? 'Switch to Task' : 'Switch to App Guide'}
-            </button>
+                }}
+                style={{
+                  background: 'rgba(255,255,255,0.2)',
+                  border: '1px solid rgba(255,255,255,0.3)',
+                  color: 'white',
+                  borderRadius: '4px',
+                  padding: '4px 8px',
+                  fontSize: '12px',
+                  cursor: 'pointer'
+                }}
+                title="Refresh tasks list"
+              >
+                ↻
+              </button>
+              <button
+                onClick={() => {
+                  if (mode === 'APP_GUIDE') {
+                    setMode('TASK');
+                    // If there are tasks, select the first one
+                    if (tasks.length > 0 && !currentTaskId) {
+                      const firstTask = tasks[0];
+                      setCurrentTaskId(firstTask.id.toString());
+                      setCurrentTaskTitle(firstTask.title);
+                      localStorage.setItem('selectedTaskId', firstTask.id.toString());
+                    }
+                  } else {
+                    setMode('APP_GUIDE');
+                  }
+                }}
+                style={{
+                  background: 'rgba(255,255,255,0.2)',
+                  border: '1px solid rgba(255,255,255,0.3)',
+                  color: 'white',
+                  borderRadius: '4px',
+                  padding: '4px 8px',
+                  fontSize: '12px',
+                  cursor: 'pointer'
+                }}
+              >
+                {mode === 'APP_GUIDE' ? 'Switch to Task' : 'Switch to App Guide'}
+              </button>
+            </div>
           </div>
           {/* Message display area - scrollable */}
           <div className="unified-chat-body" style={{

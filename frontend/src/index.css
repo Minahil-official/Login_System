@@ -1,0 +1,473 @@
+/* index.css - Global styles for the entire application */
+/* This file contains CSS variables, reset styles, and component styles */
+
+/* ==================== CSS VARIABLES & ROOT STYLES ==================== */
+
+/* :root defines CSS custom properties (variables) available throughout the app */
+:root {
+  /* Font stack - tries Inter first, then falls back to system fonts */
+  font-family: Inter, Avenir, 'Segoe UI', Helvetica, sans-serif;
+  /* Base font size - all rem units are relative to this */
+  font-size: 16px;
+  /* Line height for comfortable reading */
+  line-height: 24px;
+  /* Default font weight (normal) */
+  font-weight: 400;
+
+  /* Tell browser to use light color scheme for scrollbars and form controls */
+  color-scheme: light;
+  /* Default text color - dark gray for readability */
+  color: #0f1419;
+  /* Page background color - light gray */
+  background-color: #f7f7f7;
+
+  /* Disable automatic font synthesis (fake bold/italic) for better typography */
+  font-synthesis: none;
+  /* Optimize text rendering for legibility over speed */
+  text-rendering: optimizeLegibility;
+  /* Smooth font rendering on Mac/iOS (antialiasing) */
+  -webkit-font-smoothing: antialiased;
+  /* Smooth font rendering on Firefox Mac */
+  -moz-osx-font-smoothing: grayscale;
+  /* Prevent iOS from automatically resizing text */
+  -webkit-text-size-adjust: 100%;
+}
+
+/* ==================== CSS RESET ==================== */
+
+/* Apply border-box sizing to all elements */
+/* This makes width/height include padding and border, which is more intuitive */
+* {
+  box-sizing: border-box;
+}
+
+/* Reset body margins and set minimum dimensions */
+body {
+  margin: 0;
+  /* Minimum width to prevent horizontal scroll on very small screens */
+  min-width: 320px;
+  /* Ensure body takes at least full viewport height */
+  min-height: 100vh;
+}
+
+/* ==================== LANDING SCREEN ==================== */
+
+/* The initial landing page users see before logging in */
+.landing-screen {
+  /* Fixed positioning to center on screen regardless of scroll */
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  /* Center the element by moving it back by half its own dimensions */
+  transform: translate(-50%, -50%);
+  /* Responsive width with maximum limit */
+  width: 90%;
+  max-width: 460px;
+  padding: 3rem 2rem;
+
+  /* Flexbox for centering content inside */
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+
+  /* Gradient background for visual appeal */
+  background: linear-gradient(135deg, #a18cd1 0%, #fbc2eb 100%);
+  color: #333;
+  text-align: center;
+  border-radius: 24px;
+  /* Soft shadow for depth effect */
+  box-shadow: 0 20px 60px rgba(0,0,0,0.15);
+  /* Smooth transition for hover effects */
+  transition: transform 0.4s ease, box-shadow 0.4s ease;
+}
+
+/* Hover effect - slight lift and scale up */
+.landing-screen:hover {
+  /* Move up slightly and scale to 102% */
+  transform: translate(-50%, -52%) scale(1.02);
+  /* Stronger shadow when hovering */
+  box-shadow: 0 30px 80px rgba(0,0,0,0.25);
+}
+
+/* Main title on landing screen */
+.landing-screen h1 {
+  font-size: 3.5rem;
+  margin-bottom: 2rem;
+  font-weight: 800;
+  /* Subtle text shadow for depth */
+  text-shadow: 0 2px 4px rgba(255,255,255,0.4);
+  /* Tighter letter spacing for display text */
+  letter-spacing: -1px;
+  color: #fff;
+}
+
+/* "Try it out" call-to-action button */
+.landing-screen .try-btn {
+  padding: 1rem 3rem;
+  font-size: 1.25rem;
+  font-weight: 700;
+  background: white;
+  /* Button text matches the gradient start color */
+  color: #a18cd1;
+  border: none;
+  /* Pill-shaped button */
+  border-radius: 50px;
+  cursor: pointer;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+  transition: all 0.3s ease;
+}
+
+/* Button hover effect - lift up */
+.landing-screen .try-btn:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 25px rgba(0,0,0,0.2);
+  background: #fff;
+}
+
+/* ==================== AUTH PAGE ==================== */
+
+/* Container for the login/signup form */
+.auth-page {
+  max-width: 400px;
+  /* Center horizontally with top margin */
+  margin: 100px auto;
+  padding: 2rem;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  background: white;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+}
+
+/* Auth page heading */
+.auth-page h2 {
+  text-align: center;
+  margin-bottom: 1.5rem;
+}
+
+/* Input fields in auth form */
+.auth-page input {
+  width: 100%;
+  padding: 0.75rem;
+  margin-bottom: 1rem;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  font-size: 1rem;
+}
+
+/* Primary submit button (Login/Sign Up) */
+.auth-page button[type="submit"] {
+  width: 100%;
+  padding: 0.75rem;
+  background: #007bff;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 1rem;
+}
+
+/* Disabled state for submit button */
+.auth-page button[type="submit"]:disabled {
+  background: #6c757d;
+  cursor: not-allowed;
+}
+
+/* Secondary button (toggle between login/signup) */
+.auth-page button[type="button"] {
+  width: 100%;
+  padding: 0.5rem;
+  background: #f8f9fa;
+  color: #007bff;
+  border: 1px solid #dee2e6;
+  border-radius: 4px;
+  cursor: pointer;
+  margin-top: 0.5rem;
+}
+
+/* Error message styling */
+.auth-page .error {
+  color: #dc3545;
+  text-align: center;
+  margin-top: 1rem;
+}
+
+/* ==================== MODAL OVERLAY ==================== */
+
+/* Dark backdrop that appears behind modals */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  /* Semi-transparent black background */
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  /* Ensure modal appears above other content */
+  z-index: 1000;
+  /* Blur the content behind the modal */
+  backdrop-filter: blur(5px);
+}
+
+/* The modal box itself */
+.modal-content {
+  background: white;
+  padding: 2rem;
+  border-radius: 16px;
+  width: 90%;
+  max-width: 450px;
+  box-shadow: 0 20px 40px rgba(0,0,0,0.2);
+  position: relative;
+}
+
+/* Override auth-page styles when inside modal */
+/* This removes duplicate styling/shadows */
+.modal-content .auth-page {
+  margin: 0;
+  box-shadow: none;
+  border: none;
+  padding: 0;
+}
+
+/* Cancel/close link button in modals */
+.close-link {
+  background: none;
+  border: none;
+  color: #666;
+  text-decoration: underline;
+  cursor: pointer;
+  margin-top: 15px;
+  width: 100%;
+  text-align: center;
+  font-size: 0.9rem;
+}
+
+/* Hover state for close link */
+.close-link:hover {
+  color: #333;
+}
+
+/* ==================== TASKS PAGE ==================== */
+
+/* Container for the tasks list page */
+.tasks-page {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 2rem;
+}
+
+/* Page title */
+.tasks-page h1 {
+  margin-bottom: 2rem;
+}
+
+/* Container for task cards */
+.tasks-list {
+  display: flex;
+  flex-direction: column;
+  /* Space between task cards */
+  gap: 1rem;
+}
+
+/* Individual task card */
+.task-card {
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  padding: 1.5rem;
+  background: white;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+
+/* Task title in card */
+.task-card h3 {
+  margin: 0 0 0.5rem 0;
+  color: #333;
+}
+
+/* Task description in card */
+.task-card p {
+  margin: 0 0 1rem 0;
+  color: #666;
+}
+
+/* Link button to open chat */
+.chat-link {
+  display: inline-block;
+  padding: 0.5rem 1rem;
+  background: #007bff;
+  color: white;
+  text-decoration: none;
+  border-radius: 4px;
+  font-size: 0.9rem;
+}
+
+/* Logout button - red to indicate destructive action */
+.logout-btn {
+  padding: 0.5rem 1rem;
+  background: #dc3545;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  margin-bottom: 1rem;
+}
+
+/* ==================== CHAT PAGE ==================== */
+
+/* Main chat container - full height layout */
+.chat-container {
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  max-width: 900px;
+  margin: 0 auto;
+}
+
+/* Chat page header with navigation */
+.chat-header {
+  padding: 1rem 2rem;
+  border-bottom: 1px solid #ddd;
+  background: white;
+  display: flex;
+  align-items: center;
+}
+
+/* Back navigation link */
+.back-link {
+  color: #007bff;
+  text-decoration: none;
+  font-weight: 500;
+}
+
+/* Scrollable message area */
+.chat-messages {
+  /* Take remaining vertical space */
+  flex: 1;
+  overflow-y: auto;
+  padding: 2rem;
+  background: #f8f9fa;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Individual message container */
+.message {
+  display: flex;
+  margin-bottom: 1.5rem;
+  /* Limit message width for readability */
+  max-width: 80%;
+}
+
+/* User messages - align to right side */
+.message.user {
+  align-self: flex-end;
+  flex-direction: row-reverse;
+}
+
+/* Agent messages - align to left side */
+.message.agent {
+  align-self: flex-start;
+}
+
+/* Agent name label above message */
+.agent-name {
+  font-weight: bold;
+  color: #666;
+  margin-bottom: 0.25rem;
+  font-size: 0.9rem;
+}
+
+/* Message bubble styling */
+.message-content {
+  padding: 1rem 1.25rem;
+  border-radius: 18px;
+  max-width: 100%;
+  /* Break long words to prevent overflow */
+  word-wrap: break-word;
+}
+
+/* User message bubble - blue background */
+.message.user .message-content {
+  background: #007bff;
+  color: white;
+  /* Flatten bottom-right corner for speech bubble effect */
+  border-bottom-right-radius: 4px;
+}
+
+/* Agent message bubble - white with border */
+.message.agent .message-content {
+  background: white;
+  border: 1px solid #e0e0e0;
+  /* Flatten bottom-left corner for speech bubble effect */
+  border-bottom-left-radius: 4px;
+}
+
+/* Message timestamp */
+.timestamp {
+  font-size: 0.75rem;
+  opacity: 0.7;
+  margin-top: 0.25rem;
+  align-self: flex-end;
+}
+
+/* ==================== CHAT INPUT AREA ==================== */
+
+/* Input area at bottom of chat */
+.chat-input-area {
+  padding: 1.5rem 2rem;
+  border-top: 1px solid #ddd;
+  background: white;
+  display: flex;
+  gap: 1rem;
+  /* Align items to bottom for textarea expansion */
+  align-items: flex-end;
+}
+
+/* Text input field */
+.chat-input-area input {
+  flex: 1;
+  padding: 0.875rem 1.25rem;
+  border: 1px solid #ccc;
+  /* Pill-shaped input */
+  border-radius: 24px;
+  font-size: 1rem;
+  /* Disable manual resize (this is a single-line input) */
+  resize: none;
+  min-height: 44px;
+  max-height: 150px;
+}
+
+/* Disabled input styling */
+.chat-input-area input:disabled {
+  background: #f8f9fa;
+}
+
+/* Send button */
+.chat-input-area button {
+  padding: 0.875rem 2rem;
+  background: #007bff;
+  color: white;
+  border: none;
+  border-radius: 24px;
+  cursor: pointer;
+  font-size: 1rem;
+  /* Prevent text wrapping */
+  white-space: nowrap;
+}
+
+/* Disabled send button */
+.chat-input-area button:disabled {
+  background: #6c757d;
+  cursor: not-allowed;
+}
+
+/* ==================== UTILITY CLASSES ==================== */
+
+/* Loading state styling */
+.loading {
+  opacity: 0.7;
+  font-style: italic;
+}

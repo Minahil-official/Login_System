@@ -1,0 +1,178 @@
+/* taskpopup.css - Styles for the Dashboard and Task Management UI */
+
+/* ==================== LAYOUT ==================== */
+
+/* Main app container - centers content and sets background gradient */
+.app-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;  /* Full viewport height */
+  background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);  /* Subtle gradient background */
+  font-family: 'Inter', sans-serif;  /* Modern, clean font */
+}
+
+/* ==================== DASHBOARD CARD ==================== */
+
+/* Main dashboard card - contained size to prevent full-page layout */
+.small-page {
+  width: 90%;
+  max-width: 450px;  /* Limit width for better readability */
+  background: white;
+  padding: 30px;
+  border-radius: 20px;  /* Rounded corners for modern look */
+  box-shadow: 0 15px 35px rgba(0,0,0,0.1);  /* Soft shadow for depth */
+  position: relative;  /* For positioning child elements */
+}
+
+/* Dashboard heading styles */
+h2 {
+  color: #333;
+  margin-bottom: 20px;
+  font-weight: 700;  /* Bold heading */
+}
+
+/* ==================== BUTTONS ==================== */
+
+/* Primary action button style (Create Task, View Tasks, etc.) */
+.submit-btn {
+  background: #6366f1;  /* Purple/indigo color */
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: transform 0.2s;  /* Smooth animation on hover */
+}
+
+/* Button hover effect - slight lift and color change */
+.submit-btn:hover {
+  transform: translateY(-2px);  /* Lift button up slightly */
+  background: #4f46e5;  /* Darker shade on hover */
+}
+
+/* ==================== TASK LIST ==================== */
+
+/* Container for the list of tasks */
+.task-list {
+  margin-top: 20px;
+}
+
+/* Individual task row styling */
+.task-line {
+  display: flex;
+  justify-content: space-between;  /* Space out title and menu */
+  align-items: center;
+  padding: 15px;
+  background: #f9fafb;  /* Light gray background */
+  border-radius: 12px;
+  margin-bottom: 10px;  /* Space between tasks */
+}
+
+/* ==================== MODAL/POPUP STYLES ==================== */
+
+/* Dark overlay behind modals - covers entire screen */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);  /* Semi-transparent black */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;  /* Ensure modal appears above other content */
+}
+
+/* Modal content box */
+.modal-content {
+  background: white;
+  padding: 25px;
+  border-radius: 15px;
+  width: 300px;
+  text-align: center;
+}
+
+/* Input fields inside modals */
+.modal-content input {
+  width: 100%;
+  padding: 10px;
+  margin: 15px 0;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+}
+
+/* ==================== FLOATING AGENT CHAT UI ==================== */
+
+/* Container for the floating chat button and window */
+.agent-container {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  z-index: 2000;  /* Above modals */
+}
+
+/* Floating action button (FAB) to open/close chat */
+.agent-fab {
+  width: 60px;
+  height: 60px;
+  border-radius: 30px;  /* Circular button */
+  background: #6366f1;  /* Match primary button color */
+  color: white;
+  border: none;
+  font-size: 24px;
+  cursor: pointer;
+  box-shadow: 0 4px 15px rgba(99, 102, 241, 0.4);  /* Colored shadow for emphasis */
+}
+
+/* Chat window container */
+.agent-window {
+  position: absolute;
+  bottom: 80px;  /* Position above the FAB */
+  right: 0;
+  width: 320px;
+  height: 450px;
+  background: white;
+  border-radius: 15px;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 10px 40px rgba(0,0,0,0.2);  /* Strong shadow for popup effect */
+  overflow: hidden;  /* Clip content to rounded corners */
+}
+
+/* Chat window header */
+.agent-header {
+  background: #6366f1;
+  color: white;
+  padding: 15px;
+  font-weight: bold;
+}
+
+/* Chat message area */
+.agent-body {
+  flex: 1;  /* Take remaining space */
+  padding: 15px;
+  overflow-y: auto;  /* Scroll when messages overflow */
+  display: flex;
+  flex-direction: column;
+  gap: 10px;  /* Space between messages */
+}
+
+/* User message bubble style */
+.msg-user {
+  align-self: flex-end;  /* Align to right */
+  background: #6366f1;
+  color: white;
+  padding: 8px 12px;
+  border-radius: 12px 12px 0 12px;  /* Rounded except bottom-right */
+}
+
+/* Agent message bubble style */
+.msg-agent {
+  align-self: flex-start;  /* Align to left */
+  background: #f3f4f6;  /* Light gray */
+  color: #374151;  /* Dark gray text */
+  padding: 8px 12px;
+  border-radius: 12px 12px 12px 0;  /* Rounded except bottom-left */
+}
