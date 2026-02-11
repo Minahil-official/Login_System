@@ -2,9 +2,9 @@
 // This component manages the login state and decides what screen to show the user
 
 // Import React and useState hook for managing component state
-import React, { useState } from "react";
-// Import the Login component for user authentication
-import Login from "./pages/login";
+import React, { useState, useEffect } from "react";
+// Import the new AuthForm component for login/signup
+import AuthForm from "./components/AuthForm";
 // Import Dashboard component (note: it's imported from taskpopup file which contains the task management dashboard)
 import Dashboard from "./components/taskpopup";
 
@@ -12,8 +12,6 @@ import Dashboard from "./components/taskpopup";
 const App: React.FC = () => {
   // Track whether user is logged in - starts as false (not logged in)
   const [isLoggedIn, setIsLoggedIn] = useState(false);
-  // Track whether to show the login modal popup
-  const [showLoginModal, setShowLoginModal] = useState(false);
   // Store the logged-in user's information, null means no user logged in
   // This object contains all the user details we get back from the server after login
   const [user, setUser] = useState<{
@@ -25,8 +23,34 @@ const App: React.FC = () => {
     token: string;
   } | null>(null);
 
-  // This function is called when login is successful
-  // It receives the user data from the Login component and updates our state
+  // Check if user is already logged in (has token in localStorage)
+  useEffect(() => {
+    const token = localStorage.getItem('token');
+    const userStr = localStorage.getItem('user');
+    
+    if (token && userStr) {
+      try {
+        const userData = JSON.parse(userStr);
+        setUser({
+          id: userData.id,
+          username: userData.username,
+          first_name: userData.first_name,
+          last_name: userData.last_name,
+          email: userData.email,
+          token: token
+        });
+        setIsLoggedIn(true);
+      } catch (error) {
+        // Invalid user data, clear it
+        localStorage.removeItem('token');
+        localStorage.removeItem('user');
+        localStorage.removeItem('refresh_token');
+      }
+    }
+  }, []);
+
+  // This function is called when login/signup is successful
+  // It receives the user data from the AuthForm component and updates our state
   const handleLoginSuccess = (userData: {
     id: number;
     username: string;
@@ -39,32 +63,13 @@ const App: React.FC = () => {
     setUser(userData);
     // Mark user as logged in
     setIsLoggedIn(true);
-    // Hide the login modal since we're now logged in
-    setShowLoginModal(false);
   };
 
   return (
     <div className="app-container">
-      {/* Show landing screen only when user is NOT logged in AND login modal is NOT showing */}
-      {!isLoggedIn && !showLoginModal && (
-        <div className="landing-screen">
-          {/* Main app title on the landing page */}
-          <h1>Task AI</h1>
-          {/* Button to open the login modal when clicked */}
-          <button className="try-btn" onClick={() => setShowLoginModal(true)}>Try it out</button>
-        </div>
-      )}
-
-      {/* Show login modal when user clicks "Try it out" button */}
-      {showLoginModal && (
-        <div className="modal-overlay">
-          <div className="modal-content">
-            {/* Login form component - pass the success handler as a prop */}
-            <Login onLogin={handleLoginSuccess} />
-            {/* Cancel button to close the modal without logging in */}
-            <button className="close-link" onClick={() => setShowLoginModal(false)}>Cancel</button>
-          </div>
-        </div>
+      {/* Show AuthForm (login/signup) when user is NOT logged in */}
+      {!isLoggedIn && (
+        <AuthForm onLoginSuccess={handleLoginSuccess} />
       )}
 
       {/* Show the Dashboard only when user is logged in and we have user data */}

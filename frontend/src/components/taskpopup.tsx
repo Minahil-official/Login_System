@@ -46,8 +46,6 @@ const Dashboard: React.FC<{
   const [newTaskName, setNewTaskName] = useState("");
   // Store the description for a new task being created
   const [newTaskDescription, setNewTaskDescription] = useState("");
-  // Track which task is selected for AI chat
-  const [selectedTaskForAI, setSelectedTaskForAI] = useState<{id: number, title: string} | null>(null);
   // Track loading state while fetching tasks
   const [loading, setLoading] = useState(false);
   // Store any error messages to display
@@ -63,17 +61,40 @@ const Dashboard: React.FC<{
   // Function to fetch all tasks from the API
   const fetchTasks = async () => {
     setLoading(true);
+    setError("");
     try {
+      // Check if token exists before making request
+      const token = localStorage.getItem('token');
+      if (!token) {
+        setError("No authentication token found. Please log in again.");
+        setLoading(false);
+        return;
+      }
+      
       // Make GET request to fetch tasks
       const response = await api.get("/tasks/");
       // Update state with fetched tasks
       setTasks(response.data);
       // Show the task list after successful fetch
       setShowTasks(true);
-    } catch (err) {
+    } catch (err: any) {
       // Display error message if fetch fails
-      setError("Failed to load tasks");
-      console.error(err);
+      let errorMsg = "Failed to load tasks";
+      if (err.response?.status === 401) {
+        errorMsg = "Session expired. Please log in again.";
+        // Clear tokens and redirect to login
+        localStorage.removeItem('token');
+        localStorage.removeItem('refresh_token');
+        localStorage.removeItem('user');
+        // Reload to show login page
+        setTimeout(() => window.location.reload(), 1000);
+      } else if (err.response?.data?.detail) {
+        errorMsg = `Error: ${err.response.data.detail}`;
+      } else if (err.message) {
+        errorMsg = err.message;
+      }
+      setError(errorMsg);
+      console.error("Failed to fetch tasks:", err);
     } finally {
       // Always turn off loading state
       setLoading(false);
@@ -260,7 +281,7 @@ const Dashboard: React.FC<{
                         }}
                         onClick={() => { setEditingId(task.id); setEditValue(task.title); setActiveKebab(null); }}
                       >
-                        Edit
+                        ✏️ Edit
                       </button>
                       {/* Delete option - removes the task */}
                       <button
@@ -277,7 +298,7 @@ const Dashboard: React.FC<{
                         }}
                         onClick={() => handleDelete(task.id)}
                       >
-                        Delete
+                        🗑️ Delete
                       </button>
                     </div>
                   )}
@@ -293,8 +314,6 @@ const Dashboard: React.FC<{
       {/* Unified AI Chat component - supports both App Guide and Task modes */}
       <UnifiedChat
         user={user}
-        taskName={selectedTaskForAI}
-        onCloseTaskMenu={() => setActiveKebab(null)}
       />
     </div>
   );

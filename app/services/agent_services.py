@@ -109,11 +109,21 @@ def chat_with_app_guide(user: User, message: str):
 
     try:
         instructions = get_app_guide_agent(user_name=user.username)
+        if not instructions or not instructions.strip():
+            raise ValueError("Failed to generate agent instructions")
+        
         response_text = run_agent_sync(instructions, message)
+        
+        if not response_text or not response_text.strip():
+            response_text = "I'm here to help! Could you please rephrase your question about how to use the app?"
+        
         print(f"[DEBUG] General Purpose Agent response: {response_text[:200]}...")
     except Exception as e:
+        import traceback
+        error_details = traceback.format_exc()
         print(f"[ERROR] General Purpose Agent failed: {str(e)}")
-        response_text = "I'm having trouble right now. Please try again."
+        print(f"[ERROR] Full traceback: {error_details}")
+        response_text = f"I'm having trouble right now. Error: {str(e)}. Please try again or check if the API key is configured correctly."
 
     return {
         "response": response_text,

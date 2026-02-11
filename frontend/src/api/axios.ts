@@ -28,6 +28,15 @@ api.interceptors.request.use(
     // This authenticates the user for protected API endpoints
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
+    } else {
+      console.warn("[API] No token found in localStorage");
+    }
+
+    // Ensure Content-Type is set for POST/PUT requests with data
+    if (config.data && (config.method === 'post' || config.method === 'put' || config.method === 'patch')) {
+      if (!config.headers['Content-Type']) {
+        config.headers['Content-Type'] = 'application/json';
+      }
     }
 
     // Return the modified config to continue with the request
@@ -36,6 +45,27 @@ api.interceptors.request.use(
   // Error handler - if something goes wrong before sending
   (error) => {
     // Reject the promise to propagate the error
+    return Promise.reject(error);
+  }
+);
+
+// Add a response interceptor to handle 401 errors (unauthorized/expired token)
+api.interceptors.response.use(
+  // Success handler - just return the response
+  (response) => response,
+  // Error handler - handle 401 errors
+  (error) => {
+    if (error.response?.status === 401) {
+      // Token is invalid or expired
+      console.error("[API] 401 Unauthorized - Token may be expired or invalid");
+      // Clear stored tokens
+      localStorage.removeItem('token');
+      localStorage.removeItem('refresh_token');
+      localStorage.removeItem('user');
+      
+      // Optionally redirect to login (but don't do it automatically to avoid breaking the app)
+      // window.location.href = '/';
+    }
     return Promise.reject(error);
   }
 );

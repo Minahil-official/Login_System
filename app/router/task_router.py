@@ -26,7 +26,6 @@ def create_task(
     return task_controller.create_task_controller(db, current_user, task_data)
 
 @router.get("/", response_model=List[TaskResponse])
-@router.get("/tasks")
 def get_tasks(skip: int = 0, limit: int = 100, current_user: User = Depends(get_current_user), db: Session = Depends(get_db)):
     return task_controller.get_tasks_controller(db, current_user, skip, limit)
 

@@ -32,6 +32,17 @@ h2 {
   font-weight: 700;  /* Bold heading */
 }
 
+/* Header section with welcome and buttons */
+.header-section {
+  margin-bottom: 24px;
+}
+
+.header-section h2 {
+  margin-bottom: 16px;
+  color: #1a202c;
+  font-size: 24px;
+}
+
 /* ==================== BUTTONS ==================== */
 
 /* Primary action button style (Create Task, View Tasks, etc.) */
@@ -67,6 +78,119 @@ h2 {
   background: #f9fafb;  /* Light gray background */
   border-radius: 12px;
   margin-bottom: 10px;  /* Space between tasks */
+  position: relative;  /* For dropdown positioning */
+}
+
+/* Kebab menu wrapper */
+.kebab-wrap {
+  position: relative;
+}
+
+/* Kebab menu button (three dots) */
+.kebab-btn {
+  background: none;
+  border: none;
+  font-size: 20px;
+  cursor: pointer;
+  padding: 4px 8px;
+  color: #6b7280;
+  border-radius: 4px;
+  transition: background 0.2s;
+}
+
+.kebab-btn:hover {
+  background: #e5e7eb;
+}
+
+/* Dropdown menu */
+.dropdown {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  margin-top: 4px;
+  background: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  min-width: 140px;
+  z-index: 100;
+  overflow: hidden;
+  animation: slideDown 0.2s ease-out;
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.dropdown button {
+  transition: background 0.2s;
+}
+
+.dropdown button:hover {
+  background: #f3f4f6 !important;
+}
+
+/* Edit box for inline editing */
+.edit-box {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  width: 100%;
+}
+
+.edit-box input {
+  flex: 1;
+  padding: 8px 12px;
+  border: 2px solid #6366f1;
+  border-radius: 8px;
+  font-size: 14px;
+}
+
+.edit-box button {
+  padding: 8px 16px;
+  background: #6366f1;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 600;
+  transition: background 0.2s;
+}
+
+.edit-box button:hover {
+  background: #4f46e5;
+}
+
+/* Modal actions */
+.modal-actions {
+  display: flex;
+  gap: 12px;
+  justify-content: flex-end;
+  margin-top: 16px;
+}
+
+.close-btn {
+  padding: 10px 20px;
+  background: #f3f4f6;
+  color: #374151;
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 600;
+  transition: background 0.2s;
+}
+
+.close-btn:hover {
+  background: #e5e7eb;
 }
 
 /* ==================== MODAL/POPUP STYLES ==================== */

@@ -1,4 +1,4 @@
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, Field
 from datetime import datetime
 from typing import Optional
 
@@ -16,7 +16,15 @@ class AgentResponse(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
 class AgentChatRequest(BaseModel):
-    message: str
+    message: str = Field(..., min_length=1, description="The message to send to the agent")
+
+    model_config = ConfigDict(
+        json_schema_extra={
+            "example": {
+                "message": "How do I create a task?"
+            }
+        }
+    )
 
 class AgentChatResponse(BaseModel):
     response: str

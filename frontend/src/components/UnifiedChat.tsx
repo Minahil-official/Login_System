@@ -19,19 +19,12 @@ interface UnifiedChatProps {
     email: string;
     token: string;
   };
-  // Optional task passed from parent when user selects "Agent Chat" from task menu
-  taskName?: {
-    id: number;
-    title: string;
-  } | null;
-  // Callback to close the task menu when chat is opened
-  onCloseTaskMenu?: () => void;
 }
 
 // Define the chat mode types
 type ChatMode = 'APP_GUIDE' | 'TASK';
 
-const UnifiedChat: React.FC<UnifiedChatProps> = ({ user, taskName, onCloseTaskMenu }) => {
+const UnifiedChat: React.FC<UnifiedChatProps> = ({ user }) => {
   // Track whether the chat window is open or closed
   const [isOpen, setIsOpen] = useState(false);
   // Track the current chat mode
@@ -47,6 +40,8 @@ const UnifiedChat: React.FC<UnifiedChatProps> = ({ user, taskName, onCloseTaskMe
   // Track which task is currently selected for chat (when in TASK mode)
   const [currentTaskId, setCurrentTaskId] = useState<string>('');
   const [currentTaskTitle, setCurrentTaskTitle] = useState<string>('');
+  // Track if we're showing the task selection list
+  const [showTaskList, setShowTaskList] = useState(false);
 
   // Clear all old chat history when component first loads
   useEffect(() => {
@@ -60,56 +55,29 @@ const UnifiedChat: React.FC<UnifiedChatProps> = ({ user, taskName, onCloseTaskMe
     setMessages([]);
   }, []);
 
-  // Handle when a task is selected from the dashboard menu
-  // This opens the chat window and switches to TASK mode
-  useEffect(() => {
-    if (taskName && taskName.id) {
-      const taskId = taskName.id.toString();
-      setCurrentTaskId(taskId);
-      setCurrentTaskTitle(taskName.title);
-      setMode('TASK');
-
-      // Clear previous messages when switching to task mode
-      setMessages([
-        {
-          sender: "agent",
-          text: `Hi ${user.first_name || user.username}! How can I help with "${taskName.title}"?`
-        }
-      ]);
-
-      // Auto-open the chat window when a task is selected
-      setIsOpen(true);
-      // Close the task menu if provided
-      if (onCloseTaskMenu) onCloseTaskMenu();
-    }
-  }, [taskName, user.first_name, user.username, onCloseTaskMenu]);
-
-  // Fetch all tasks when the component mounts, when token changes, or when chat opens
+  // Fetch all tasks when needed
   useEffect(() => {
     const fetchTasks = async () => {
       try {
         // Get list of tasks from the API
         const response = await api.get('/tasks/');
         setTasks(response.data);
-
-        // If no task was passed as prop and we're in TASK mode, try to restore selected task
-        if (mode === 'TASK' && !currentTaskId) {
-          const taskId = localStorage.getItem('selectedTaskId') || '';
-          if (taskId) {
-            const task = response.data.find((t: Task) => t.id.toString() === taskId);
-            if (task) {
-              setCurrentTaskId(taskId);
-              setCurrentTaskTitle(task.title);
-            }
-          }
-        }
-      } catch (error) {
+      } catch (error: any) {
         console.error('Failed to fetch tasks:', error);
+        if (error.response?.status === 401) {
+          // Token expired, clear and reload
+          localStorage.removeItem('token');
+          localStorage.removeItem('refresh_token');
+          localStorage.removeItem('user');
+          window.location.reload();
+        }
       }
     };
-    // Only fetch if we have a valid token and chat is open
-    if (user.token && isOpen) fetchTasks();
-  }, [user.token, mode, currentTaskId, isOpen]);
+    // Fetch tasks when chat opens or when switching to task mode
+    if (user.token && (isOpen || showTaskList)) {
+      fetchTasks();
+    }
+  }, [user.token, isOpen, showTaskList]);
 
   // Handle mode switching - reset messages when switching modes
   useEffect(() => {
@@ -121,6 +89,7 @@ const UnifiedChat: React.FC<UnifiedChatProps> = ({ user, taskName, onCloseTaskMe
           text: `Hi ${user.first_name || user.username}! I'm the App Assistant. I'm here to help you understand how to use this application. Ask me about:\n\n• How to create tasks\n• How to use task agents\n• App features and navigation\n• Permissions and settings\n• Any questions about the app!`
         }
       ]);
+      setShowTaskList(false);
     } else if (mode === 'TASK' && currentTaskTitle) {
       // Set task-specific messages when switching to task mode
       setMessages([
@@ -129,50 +98,55 @@ const UnifiedChat: React.FC<UnifiedChatProps> = ({ user, taskName, onCloseTaskMe
           text: `Hi ${user.first_name || user.username}! How can I help with "${currentTaskTitle}"?`
         }
       ]);
-    } else if (mode === 'TASK' && !currentTaskTitle && tasks.length > 0) {
-      // If switching to task mode but no task is selected, use the first task
-      const firstTask = tasks[0];
-      setCurrentTaskId(firstTask.id.toString());
-      setCurrentTaskTitle(firstTask.title);
-      localStorage.setItem('selectedTaskId', firstTask.id.toString());
-
-      setMessages([
-        {
-          sender: "agent",
-          text: `Hi ${user.first_name || user.username}! How can I help with "${firstTask.title}"?`
-        }
-      ]);
+      setShowTaskList(false);
     }
-  }, [mode, currentTaskTitle, user.first_name, user.username, tasks]);
+  }, [mode, currentTaskTitle, user.first_name, user.username]);
 
-  // Handle when user selects a different task from the dropdown (only applicable in TASK mode)
+  // Handle when user selects a task from the task list
+  const handleTaskSelect = (task: Task) => {
+    setCurrentTaskId(task.id.toString());
+    setCurrentTaskTitle(task.title);
+    setMode('TASK');
+    setShowTaskList(false);
+    localStorage.setItem('selectedTaskId', task.id.toString());
+
+    // Reset messages for the selected task
+    setMessages([
+      {
+        sender: "agent",
+        text: `Hi ${user.first_name || user.username}! How can I help with "${task.title}"?`
+      }
+    ]);
+  };
+
+  // Handle when user selects a different task from the dropdown (when already in TASK mode)
   const handleTaskChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const newId = e.target.value;
     if (newId) {
       const task = tasks.find(t => t.id.toString() === newId);
       if (task) {
-        setCurrentTaskId(newId);
-        setCurrentTaskTitle(task.title);
-        localStorage.setItem('selectedTaskId', newId);
-
-        // Reset messages for the new task
-        setMessages([
-          {
-            sender: "agent",
-            text: `Hi ${user.first_name || user.username}! How can I help with "${task.title}"?`
-          }
-        ]);
+        handleTaskSelect(task);
       }
-    } else {
-      setCurrentTaskId('');
-      setCurrentTaskTitle('');
-      localStorage.removeItem('selectedTaskId');
+    }
+  };
+
+  // Handle switching from APP_GUIDE to TASK mode - show task list
+  const handleSwitchToTask = () => {
+    setShowTaskList(true);
+    // Fetch tasks if not already loaded
+    if (tasks.length === 0) {
+      api.get('/tasks/').then(response => {
+        setTasks(response.data);
+      }).catch(error => {
+        console.error('Failed to fetch tasks:', error);
+      });
     }
   };
 
   // Handle opening the chat in APP_GUIDE mode (default behavior)
   const openAppGuideMode = () => {
     setMode('APP_GUIDE');
+    setShowTaskList(false);
     setIsOpen(true);
   };
 
@@ -199,12 +173,19 @@ const UnifiedChat: React.FC<UnifiedChatProps> = ({ user, taskName, onCloseTaskMe
       let response;
       if (mode === 'APP_GUIDE') {
         // Call the app-guide endpoint (not task-specific)
+        // Ensure message is not empty and is a string
+        if (!currentInput || typeof currentInput !== 'string' || !currentInput.trim()) {
+          throw new Error("Message cannot be empty");
+        }
+        
+        // Check if token exists before making request
+        const token = localStorage.getItem('token');
+        if (!token) {
+          throw new Error("No authentication token found. Please log in again.");
+        }
+        
         response = await api.post('/tasks/app-guide/chat', {
-          message: currentInput
-        }, {
-          headers: {
-            'Content-Type': 'application/json'
-          }
+          message: currentInput.trim()
         });
       } else { // TASK mode
         // Don't send if no task is selected
@@ -213,19 +194,25 @@ const UnifiedChat: React.FC<UnifiedChatProps> = ({ user, taskName, onCloseTaskMe
         }
         // Call the task-specific endpoint
         response = await api.post(`/tasks/${currentTaskId}/chat`, {
-          message: currentInput
-        }, {
-          headers: {
-            'Content-Type': 'application/json'
-          }
+          message: currentInput.trim()
         });
       }
 
       const data = response.data;
+      // Create agent message from the response - check multiple possible response fields
+      let responseText = "";
+      if (typeof data === 'string') {
+        responseText = data;
+      } else if (data && typeof data === 'object') {
+        responseText = data.response || data.message || data.text || JSON.stringify(data);
+      } else {
+        responseText = "I'm here to help!";
+      }
+      
       // Create agent message from the response
       const agentMsg = {
         sender: "agent",
-        text: data.response || data.message || "I'm here to help!"
+        text: responseText || "I'm here to help!"
       };
       // Add agent response to conversation
       const finalHistory = [...tempHistory, agentMsg];
@@ -241,8 +228,21 @@ const UnifiedChat: React.FC<UnifiedChatProps> = ({ user, taskName, onCloseTaskMe
         if (typeof err.response.data === 'string') {
           errorDetail = err.response.data;
         } else if (err.response.data && typeof err.response.data === 'object') {
-          // Try to get the detail field or convert the object to string
-          errorDetail = err.response.data.detail || JSON.stringify(err.response.data);
+          // Handle FastAPI validation errors (422)
+          if (err.response.status === 422 && err.response.data.detail) {
+            // FastAPI validation errors are in detail array
+            if (Array.isArray(err.response.data.detail)) {
+              const validationErrors = err.response.data.detail.map((e: any) => {
+                return `${e.loc?.join('.')}: ${e.msg}`;
+              }).join(', ');
+              errorDetail = `Validation error: ${validationErrors}`;
+            } else {
+              errorDetail = err.response.data.detail;
+            }
+          } else {
+            // Try to get the detail field or convert the object to string
+            errorDetail = err.response.data.detail || err.response.data.message || JSON.stringify(err.response.data);
+          }
         }
         errorMessage = `Server error: ${err.response.status} - ${errorDetail}`;
       } else if (err.request) {
@@ -282,55 +282,39 @@ const UnifiedChat: React.FC<UnifiedChatProps> = ({ user, taskName, onCloseTaskMe
       right: "20px",
       zIndex: 1000
     }}>
-      {/* Chat header with mode and task selector - only shown when chat is open */}
-      {isOpen && (
-        <div className="chat-header" style={{
-          display: 'flex',
-          justifyContent: 'space-between',
-          padding: '10px',
-          background: mode === 'APP_GUIDE' ? '#28a745' : '#007bff',
-          color: 'white'
-        }}>
-          <span>
-            {getHeaderTitle()}
-          </span>
-          {/* Task dropdown selector - only show in TASK mode if we have tasks */}
-          {mode === 'TASK' && tasks.length > 0 && (
-            <select
-              value={currentTaskId}
-              onChange={handleTaskChange}
-              style={{ marginLeft: '10px', background: 'white', color: 'black', border: '1px solid #ccc', borderRadius: '4px' }}
-            >
-              <option value="">Select Task</option>
-              {/* Map through all tasks to create dropdown options */}
-              {tasks.map(task => (
-                <option key={task.id} value={task.id.toString()}>
-                  {task.title}
-                </option>
-              ))}
-            </select>
-          )}
-        </div>
-      )}
-      {/* Floating action button to toggle chat open/closed - always opens in App Guide mode when closed */}
+      {/* Floating action button - General Purpose Agent (always green, always visible) */}
       <button
         className="unified-chat-fab"
-        onClick={isOpen ? () => setIsOpen(false) : openAppGuideMode}
+        onClick={isOpen ? () => {
+          setIsOpen(false);
+          setMode('APP_GUIDE');
+          setShowTaskList(false);
+        } : openAppGuideMode}
         style={{
           width: "60px",
           height: "60px",
           borderRadius: "50%",
-          background: mode === 'APP_GUIDE' ? '#28a745' : '#007bff',
+          background: '#28a745', // Always green for General Purpose Agent
           color: "white",
           border: "none",
           fontSize: "24px",
           cursor: "pointer",
-          boxShadow: "0 4px 12px rgba(0,0,0,0.2)"
+          boxShadow: "0 4px 12px rgba(40, 167, 69, 0.4)",
+          transition: "all 0.3s ease",
+          position: "relative"
         }}
-        title={isOpen ? "Close chat" : "Open App Assistant (General Help)"}
+        onMouseEnter={(e) => {
+          e.currentTarget.style.transform = "scale(1.1)";
+          e.currentTarget.style.boxShadow = "0 6px 20px rgba(40, 167, 69, 0.6)";
+        }}
+        onMouseLeave={(e) => {
+          e.currentTarget.style.transform = "scale(1)";
+          e.currentTarget.style.boxShadow = "0 4px 12px rgba(40, 167, 69, 0.4)";
+        }}
+        title={isOpen ? "Close chat" : "General Purpose Agent - App Guide"}
       >
-        {/* Show X when open, robot icon when closed (always opens in App Guide mode) */}
-        {isOpen ? "×" : "🤖"}
+        {/* Show X when open, info icon when closed (General Purpose Agent) */}
+        {isOpen ? "×" : "ℹ️"}
       </button>
       {/* Chat window - only shown when isOpen is true */}
       {isOpen && (
@@ -411,16 +395,13 @@ const UnifiedChat: React.FC<UnifiedChatProps> = ({ user, taskName, onCloseTaskMe
               <button
                 onClick={() => {
                   if (mode === 'APP_GUIDE') {
-                    setMode('TASK');
-                    // If there are tasks, select the first one
-                    if (tasks.length > 0 && !currentTaskId) {
-                      const firstTask = tasks[0];
-                      setCurrentTaskId(firstTask.id.toString());
-                      setCurrentTaskTitle(firstTask.title);
-                      localStorage.setItem('selectedTaskId', firstTask.id.toString());
-                    }
+                    handleSwitchToTask();
                   } else {
                     setMode('APP_GUIDE');
+                    setCurrentTaskId('');
+                    setCurrentTaskTitle('');
+                    setShowTaskList(false);
+                    localStorage.removeItem('selectedTaskId');
                   }
                 }}
                 style={{
@@ -437,6 +418,72 @@ const UnifiedChat: React.FC<UnifiedChatProps> = ({ user, taskName, onCloseTaskMe
               </button>
             </div>
           </div>
+          {/* Task selection list - shown when switching from APP_GUIDE to TASK */}
+          {showTaskList && (
+            <div style={{
+              padding: "15px",
+              borderBottom: "1px solid #eee",
+              maxHeight: "200px",
+              overflowY: "auto"
+            }}>
+              <div style={{ 
+                fontWeight: "bold", 
+                marginBottom: "10px",
+                color: mode === 'APP_GUIDE' ? '#28a745' : '#007bff'
+              }}>
+                Select a Task:
+              </div>
+              {tasks.length === 0 ? (
+                <div style={{ 
+                  padding: "10px", 
+                  textAlign: "center", 
+                  color: "#666",
+                  fontStyle: "italic"
+                }}>
+                  No tasks available. Create a task first!
+                </div>
+              ) : (
+                <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+                  {tasks.map(task => (
+                    <button
+                      key={task.id}
+                      onClick={() => handleTaskSelect(task)}
+                      style={{
+                        padding: "10px 15px",
+                        background: "#f0f0f0",
+                        border: "1px solid #ddd",
+                        borderRadius: "8px",
+                        cursor: "pointer",
+                        textAlign: "left",
+                        transition: "all 0.2s",
+                        fontSize: "14px"
+                      }}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.background = "#e0e0e0";
+                        e.currentTarget.style.borderColor = "#007bff";
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.background = "#f0f0f0";
+                        e.currentTarget.style.borderColor = "#ddd";
+                      }}
+                    >
+                      <div style={{ fontWeight: "600" }}>{task.title}</div>
+                      {task.description && (
+                        <div style={{ 
+                          fontSize: "12px", 
+                          color: "#666", 
+                          marginTop: "4px" 
+                        }}>
+                          {task.description.substring(0, 50)}{task.description.length > 50 ? '...' : ''}
+                        </div>
+                      )}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+
           {/* Message display area - scrollable */}
           <div className="unified-chat-body" style={{
             flex: 1,

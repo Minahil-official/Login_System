@@ -50,79 +50,13 @@ body {
   min-height: 100vh;
 }
 
-/* ==================== LANDING SCREEN ==================== */
+/* ==================== APP CONTAINER ==================== */
 
-/* The initial landing page users see before logging in */
-.landing-screen {
-  /* Fixed positioning to center on screen regardless of scroll */
-  position: fixed;
-  top: 50%;
-  left: 50%;
-  /* Center the element by moving it back by half its own dimensions */
-  transform: translate(-50%, -50%);
-  /* Responsive width with maximum limit */
-  width: 90%;
-  max-width: 460px;
-  padding: 3rem 2rem;
-
-  /* Flexbox for centering content inside */
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-
-  /* Gradient background for visual appeal */
-  background: linear-gradient(135deg, #a18cd1 0%, #fbc2eb 100%);
-  color: #333;
-  text-align: center;
-  border-radius: 24px;
-  /* Soft shadow for depth effect */
-  box-shadow: 0 20px 60px rgba(0,0,0,0.15);
-  /* Smooth transition for hover effects */
-  transition: transform 0.4s ease, box-shadow 0.4s ease;
-}
-
-/* Hover effect - slight lift and scale up */
-.landing-screen:hover {
-  /* Move up slightly and scale to 102% */
-  transform: translate(-50%, -52%) scale(1.02);
-  /* Stronger shadow when hovering */
-  box-shadow: 0 30px 80px rgba(0,0,0,0.25);
-}
-
-/* Main title on landing screen */
-.landing-screen h1 {
-  font-size: 3.5rem;
-  margin-bottom: 2rem;
-  font-weight: 800;
-  /* Subtle text shadow for depth */
-  text-shadow: 0 2px 4px rgba(255,255,255,0.4);
-  /* Tighter letter spacing for display text */
-  letter-spacing: -1px;
-  color: #fff;
-}
-
-/* "Try it out" call-to-action button */
-.landing-screen .try-btn {
-  padding: 1rem 3rem;
-  font-size: 1.25rem;
-  font-weight: 700;
-  background: white;
-  /* Button text matches the gradient start color */
-  color: #a18cd1;
-  border: none;
-  /* Pill-shaped button */
-  border-radius: 50px;
-  cursor: pointer;
-  box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-  transition: all 0.3s ease;
-}
-
-/* Button hover effect - lift up */
-.landing-screen .try-btn:hover {
-  transform: translateY(-3px);
-  box-shadow: 0 8px 25px rgba(0,0,0,0.2);
-  background: #fff;
+/* Main app container - used when user is logged in */
+.app-container {
+  min-height: 100vh;
+  background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+  font-family: 'Inter', sans-serif;
 }
 
 /* ==================== AUTH PAGE ==================== */
